@@ -5,6 +5,7 @@ import userRoutes from "./routes/user.routes.js";
 import tradeRoutes from "./routes/trade.routes.js";
 import capitalGainRoutes from "./routes/capitalGain.routes.js";
 import userCapitalGainRoutes from "./routes/userCapitalGain.routes.js";
+import dashboardRoutes from "./routes/dashboard.routes.js";
 
 dotenv.config();
 connectDB();
@@ -16,6 +17,7 @@ app.use("/users", userRoutes);
 app.use("/trades", tradeRoutes);
 app.use("/capital-gain", capitalGainRoutes);
 app.use("/capital-gain", userCapitalGainRoutes);
+app.use("/dashboard", dashboardRoutes);
 
 app.get("/health", (req, res) => {
   res.json({ status: "OK" });
