@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import userRoutes from "./routes/user.routes.js";
+import tradeRoutes from "./routes/trade.routes.js";
 
 dotenv.config();
 connectDB();
@@ -10,6 +11,7 @@ const app = express();
 app.use(express.json());
 
 app.use("/users", userRoutes);
+app.use("/trades", tradeRoutes);
 
 app.get("/health", (req, res) => {
   res.json({ status: "OK" });
