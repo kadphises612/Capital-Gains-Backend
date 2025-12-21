@@ -6,11 +6,14 @@ import tradeRoutes from "./routes/trade.routes.js";
 import capitalGainRoutes from "./routes/capitalGain.routes.js";
 import userCapitalGainRoutes from "./routes/userCapitalGain.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
+import cors from "cors";
 
 dotenv.config();
 connectDB();
 
 const app = express();
+
+app.use(cors());
 app.use(express.json());
 
 app.use("/users", userRoutes);
