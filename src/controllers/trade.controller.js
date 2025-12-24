@@ -1,5 +1,6 @@
 import Trade from "../models/Trade.js";
 import User from "../models/User.js";
+import UserSummary from "../models/UserSummary.js";
 
 // Add trade
 export const createTrade = async (req, res) => {
@@ -50,6 +51,18 @@ export const createTrade = async (req, res) => {
       tax_and_broker_fee,
       net_profit,
     });
+    await UserSummary.findOneAndUpdate(
+      { userId },
+      {
+        $inc: {
+          total_trades: 1,
+          gross_profit: total_profit,
+          total_tax_and_fees: tax_and_broker_fee,
+          net_profit: net_profit,
+        },
+      },
+      { upsert: true, new: true }
+    );
 
     res.status(201).json(trade);
   } catch (error) {
