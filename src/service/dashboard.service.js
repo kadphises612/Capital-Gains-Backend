@@ -1,36 +1,31 @@
 import User from "../models/User.js";
-import Trade from "../models/Trade.js";
-import { calculateUserCapitalGain } from "./capitalGain.service.js";
+import { getSingleUserSummaryService } from "./capitalGain.service.js";
 
 export const getDashboardSummary = async () => {
   const users = await User.find();
-
-  let totalProfit = 0;
-  let totalLoss = 0;
-  let usersWithUnmatchedSells = [];
+  let totalTrades = 0;
+  let totalGrossProfit = 0;
+  let totalBrokerage = 0;
+  let totalNetProfit = 0;
 
   for (const user of users) {
-    const result = await calculateUserCapitalGain(user._id);
-
-    if (result.totalProfit >= 0) {
-      totalProfit += result.totalProfit;
-    } else {
-      totalLoss += result.totalProfit;
-    }
-
-    if (result.totalUnmatchedSellQty > 0) {
-      usersWithUnmatchedSells.push({
-        userId: user._id,
-        unmatchedSellQty: result.totalUnmatchedSellQty,
-      });
-    }
+    const {
+      total_trades: u_total_trades,
+      gross_profit: u_gross_profit,
+      total_tax_and_fees: u_total_tax_and_fees,
+      net_profit: u_net_profit,
+    } = await getSingleUserSummaryService(user._id);
+    totalTrades += u_total_trades;
+    totalBrokerage += u_total_tax_and_fees;
+    totalGrossProfit += u_gross_profit;
+    totalNetProfit += u_net_profit;
   }
 
   return {
     totalUsers: users.length,
-    totalProfit,
-    totalLoss,
-    netPnL: totalProfit + totalLoss,
-    usersWithUnmatchedSells,
+    totalTrades,
+    totalGrossProfit,
+    totalBrokerage,
+    totalNetProfit,
   };
 };

@@ -1,4 +1,5 @@
 import Trade from "../models/Trade.js";
+import UserSummary from "../models/UserSummary.js";
 
 export const calculateCapitalGain = async (userId, symbol) => {
   const trades = await Trade.find({
@@ -64,4 +65,19 @@ export const calculateUserCapitalGain = async (userId) => {
     totalUnmatchedSellQty,
     breakdown: summary,
   };
+};
+
+export const getSingleUserSummaryService = async (userId) => {
+  const summary = await UserSummary.findOne({
+    userId,
+  });
+
+  return (
+    summary || {
+      total_trades: 0,
+      gross_profit: 0,
+      total_tax_and_fees: 0,
+      net_profit: 0,
+    }
+  );
 };
