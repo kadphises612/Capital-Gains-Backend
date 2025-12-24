@@ -15,12 +15,7 @@ const tradeSchema = new mongoose.Schema(
     },
     broker: {
       type: String,
-      enum: ["ZERODHA", "GROWW", "UPSTOX", "ANGELONE", "OTHERS"],
-      required: true,
-    },
-    side: {
-      type: String,
-      enum: ["BUY", "SELL"],
+      enum: ["zerodha", "groww", "upstox", "angle_one"],
       required: true,
     },
     quantity: {
@@ -28,13 +23,30 @@ const tradeSchema = new mongoose.Schema(
       required: true,
       min: 1,
     },
-    price: {
+    buy_price: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    sell_price: {
       type: Number,
       required: true,
       min: 0,
     },
     tradeDate: {
       type: Date,
+      required: true,
+    },
+    total_profit: {
+      type: Number,
+      required: true,
+    },
+    tax_and_broker_fee: {
+      type: Number,
+      required: true,
+    },
+    net_profit: {
+      type: Number,
       required: true,
     },
   },

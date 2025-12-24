@@ -4,16 +4,29 @@ import User from "../models/User.js";
 // Add trade
 export const createTrade = async (req, res) => {
   try {
-    const { userId, symbol, broker, side, quantity, price, tradeDate } =
-      req.body;
+    const {
+      userId,
+      symbol,
+      broker,
+      quantity,
+      buy_price,
+      sell_price,
+      tradeDate,
+      total_profit,
+      tax_and_broker_fee,
+      net_profit,
+    } = req.body;
 
     if (
       !userId ||
       !symbol ||
       !broker ||
-      !side ||
+      !buy_price ||
       !quantity ||
-      !price ||
+      !sell_price ||
+      !total_profit ||
+      !tax_and_broker_fee ||
+      !net_profit ||
       !tradeDate
     ) {
       return res.status(400).json({ message: "All fields are required" });
@@ -29,10 +42,13 @@ export const createTrade = async (req, res) => {
       userId,
       symbol,
       broker,
-      side,
       quantity,
-      price,
+      buy_price,
+      sell_price,
       tradeDate,
+      total_profit,
+      tax_and_broker_fee,
+      net_profit,
     });
 
     res.status(201).json(trade);
