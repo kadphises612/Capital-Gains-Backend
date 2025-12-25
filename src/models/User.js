@@ -24,6 +24,16 @@ const userSchema = new mongoose.Schema(
   }
 );
 
+userSchema.virtual("summary", {
+  ref: "UserSummary",
+  localField: "_id",
+  foreignField: "userId",
+  justOne: true,
+});
+
+userSchema.set("toJSON", { virtuals: true });
+userSchema.set("toObject", { virtuals: true });
+
 const User = mongoose.model("User", userSchema);
 
 export default User;
