@@ -1,5 +1,5 @@
 import User from "../models/User.js";
-import { getSingleUserSummaryService } from "./capitalGain.service.js";
+import { getUserSummaryService } from "./userSummary.service.js";
 
 export const getDashboardSummary = async () => {
   const users = await User.find();
@@ -14,7 +14,7 @@ export const getDashboardSummary = async () => {
       gross_profit: u_gross_profit,
       total_tax_and_fees: u_total_tax_and_fees,
       net_profit: u_net_profit,
-    } = await getSingleUserSummaryService(user._id);
+    } = await getUserSummaryService(user._id);
     totalTrades += u_total_trades;
     totalBrokerage += u_total_tax_and_fees;
     totalGrossProfit += u_gross_profit;
