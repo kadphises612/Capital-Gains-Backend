@@ -59,6 +59,7 @@ export const createTrade = async (req, res) => {
           gross_profit: total_profit,
           total_tax_and_fees: tax_and_broker_fee,
           net_profit: net_profit,
+          net_profit_ctake: userExists.c_take ? net_profit * 0.8 : net_profit,
         },
       },
       { upsert: true, new: true }

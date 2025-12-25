@@ -7,6 +7,7 @@ export const getDashboardSummary = async () => {
   let totalGrossProfit = 0;
   let totalBrokerage = 0;
   let totalNetProfit = 0;
+  let totalCTakeNetProfit = 0;
 
   for (const user of users) {
     const {
@@ -14,11 +15,13 @@ export const getDashboardSummary = async () => {
       gross_profit: u_gross_profit,
       total_tax_and_fees: u_total_tax_and_fees,
       net_profit: u_net_profit,
+      net_profit_ctake: u_net_profit_ctake,
     } = await getUserSummaryService(user._id);
     totalTrades += u_total_trades;
     totalBrokerage += u_total_tax_and_fees;
     totalGrossProfit += u_gross_profit;
     totalNetProfit += u_net_profit;
+    totalCTakeNetProfit += u_net_profit_ctake;
   }
 
   return {
@@ -27,5 +30,6 @@ export const getDashboardSummary = async () => {
     totalGrossProfit,
     totalBrokerage,
     totalNetProfit,
+    totalCTakeNetProfit,
   };
 };
