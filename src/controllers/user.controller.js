@@ -3,15 +3,15 @@ import User from "../models/User.js";
 // Create user
 export const createUser = async (req, res) => {
   try {
-    const { name, pan, email } = req.body;
+    const { name, pan, email, broker } = req.body;
 
-    if (!name || !pan || !email) {
+    if (!name || !pan || !email || !broker) {
       return res
         .status(400)
-        .json({ message: "Name, PAN, and email are required" });
+        .json({ message: "Name, PAN, email, and broker are required" });
     }
 
-    const user = await User.create({ name, pan, email });
+    const user = await User.create({ name, pan, email, broker });
     res.status(201).json(user);
   } catch (error) {
     if (error.code === 11000) {

@@ -18,6 +18,11 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    broker: {
+      type: String,
+      enum: ["zerodha", "groww", "upstox", "angleone"],
+      required: true,
+    },
   },
   {
     timestamps: true,
