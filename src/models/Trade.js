@@ -15,7 +15,7 @@ const tradeSchema = new mongoose.Schema(
     },
     broker: {
       type: String,
-      enum: ["zerodha", "groww", "upstox", "angle_one"],
+      enum: ["zerodha", "groww", "upstox", "angleone"],
       required: true,
     },
     quantity: {
@@ -46,6 +46,10 @@ const tradeSchema = new mongoose.Schema(
       required: true,
     },
     net_profit: {
+      type: Number,
+      required: true,
+    },
+    net_profit_ctake: {
       type: Number,
       required: true,
     },

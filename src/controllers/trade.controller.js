@@ -16,6 +16,7 @@ export const createTrade = async (req, res) => {
       total_profit,
       tax_and_broker_fee,
       net_profit,
+      c_take,
     } = req.body;
 
     if (
@@ -38,7 +39,7 @@ export const createTrade = async (req, res) => {
     if (!userExists) {
       return res.status(404).json({ message: "User not found" });
     }
-
+    const net_profit_ctake = c_take ? net_profit * 0.8 : net_profit;
     const trade = await Trade.create({
       userId,
       symbol,
@@ -50,6 +51,7 @@ export const createTrade = async (req, res) => {
       total_profit,
       tax_and_broker_fee,
       net_profit,
+      net_profit_ctake,
     });
     await UserSummary.findOneAndUpdate(
       { userId },
@@ -59,7 +61,7 @@ export const createTrade = async (req, res) => {
           gross_profit: total_profit,
           total_tax_and_fees: tax_and_broker_fee,
           net_profit: net_profit,
-          net_profit_ctake: userExists.c_take ? net_profit * 0.8 : net_profit,
+          net_profit_ctake,
         },
       },
       { upsert: true, new: true }
