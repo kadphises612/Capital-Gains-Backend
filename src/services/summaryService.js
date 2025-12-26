@@ -42,31 +42,33 @@ export async function getUserSummary(userId) {
 
 export const getAllUsersSummary = async (req, res) => {
   try {
-    const report = await Trade.aggregate([
-      // 1. Group trades by user to compress data
-      {
-        $group: {
-          _id: "$userId",
-          totalTradeProfit: { $sum: "$tradeProfit" },
-          totalProfitAfterBrokerage: { $sum: "$profitAfterBrokerage" },
-          totalCommission: { $sum: "$commissionPaid" },
-          totalProfitAfterCommission: { $sum: "$profitAfterCommission" },
-          totalBrokerage: { $sum: "$brokerage" },
-        },
-      },
-
-      // 2. Join with the User collection
+    const report = await User.aggregate([
+      // 1. Start with User and join Trades
       {
         $lookup: {
-          from: "users",
+          from: "trades", // ensure this matches your actual collection name in MongoDB
           localField: "_id",
-          foreignField: "_id",
-          as: "userDetails",
+          foreignField: "userId",
+          as: "userTrades",
         },
       },
-      { $unwind: "$userDetails" },
 
-      // 3. Calculate Tax Amount and Net Profit after tax (Logic: only if positive and payee)
+      // 2. Calculate totals from the joined trades array
+      {
+        $addFields: {
+          totalTradeProfit: { $sum: "$userTrades.tradeProfit" },
+          totalProfitAfterBrokerage: {
+            $sum: "$userTrades.profitAfterBrokerage",
+          },
+          totalCommission: { $sum: "$userTrades.commissionPaid" },
+          totalProfitAfterCommission: {
+            $sum: "$userTrades.profitAfterCommission",
+          },
+          totalBrokerage: { $sum: "$userTrades.brokerage" },
+        },
+      },
+
+      // 3. Calculate Tax Amount (Logic: only if positive and tax enabled)
       {
         $addFields: {
           totalTaxAmt: {
@@ -74,13 +76,13 @@ export const getAllUsersSummary = async (req, res) => {
               if: {
                 $and: [
                   { $gt: ["$totalProfitAfterCommission", 0] },
-                  { $eq: ["$userDetails.taxOnTotalProfit", true] },
+                  { $eq: ["$taxOnTotalProfit", true] },
                 ],
               },
               then: {
                 $multiply: [
                   "$totalProfitAfterCommission",
-                  { $divide: [{ $ifNull: ["$userDetails.taxRate", 0] }, 100] },
+                  { $divide: [{ $ifNull: ["$taxRate", 0] }, 100] },
                 ],
               },
               else: 0,
@@ -89,11 +91,18 @@ export const getAllUsersSummary = async (req, res) => {
         },
       },
 
-      // 4. Project Final Fields
+      // 4. Project Final Structure
       {
         $project: {
           _id: 0,
-          user: "$userDetails",
+          user: {
+            _id: "$_id",
+            name: "$name", // Add other user fields you need here
+            email: "$email",
+            pan: "$pan",
+            taxOnTotalProfit: 1,
+            taxRate: 1,
+          },
           totalTradeProfit: 1,
           totalProfitAfterBrokerage: 1,
           totalCommission: 1,
@@ -107,7 +116,7 @@ export const getAllUsersSummary = async (req, res) => {
       },
     ]);
 
-    // 5. Calculate Grand Totals using reduce (In-memory)
+    // 5. Calculate Grand Totals (In-memory)
     const grandTotals = report.reduce(
       (acc, curr) => {
         acc.g_TradeProfit += curr.totalTradeProfit || 0;
@@ -131,14 +140,13 @@ export const getAllUsersSummary = async (req, res) => {
       }
     );
 
-    const finalObject = {
+    return {
       users: report,
       grandTotals,
       userCount: report.length,
     };
-
-    return finalObject;
   } catch (err) {
-    return {};
+    console.error(err);
+    return { users: [], grandTotals: {}, userCount: 0 };
   }
 };
