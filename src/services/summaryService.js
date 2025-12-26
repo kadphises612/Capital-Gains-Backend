@@ -8,104 +8,137 @@ export async function getUserSummary(userId) {
   const trades = await Trade.find({ userId });
 
   const {
-    transactionProfit,
-    totalProfit,
+    tradeProfit,
+    profitAfterBrokerage,
     commissionPaid,
-    netProfit,
+    profitAfterCommission,
     brokerage,
   } = trades.reduce(
     (acc, el) => {
-      acc.transactionProfit += el.transactionProfit;
-      acc.totalProfit += el.totalProfit;
+      acc.tradeProfit += el.tradeProfit;
+      acc.profitAfterBrokerage += el.profitAfterBrokerage;
       acc.commissionPaid += el.commissionPaid;
-      acc.netProfit += el.netProfit;
+      acc.profitAfterCommission += el.profitAfterCommission;
       acc.brokerage += el.brokerage;
       return acc;
     },
     {
-      transactionProfit: 0,
-      totalProfit: 0,
+      tradeProfit: 0,
+      profitAfterBrokerage: 0,
       commissionPaid: 0,
-      netProfit: 0,
+      profitAfterCommission: 0,
       brokerage: 0,
     }
   );
 
   return {
-    transactionProfit,
-    totalProfit,
+    tradeProfit,
+    profitAfterBrokerage,
     commissionPaid,
-    netProfit,
+    profitAfterCommission,
     brokerage,
   };
 }
 
-export async function getAllUsersSummary() {
-  return Trade.aggregate([
-    {
-      $group: {
-        _id: "$user",
-        grossAfterBrokerage: {
-          $sum: { $subtract: ["$totalProfit", "$brokerage"] },
+export const getAllUsersSummary = async (req, res) => {
+  try {
+    const report = await Trade.aggregate([
+      // 1. Group trades by user to compress data
+      {
+        $group: {
+          _id: "$userId",
+          totalTradeProfit: { $sum: "$tradeProfit" },
+          totalProfitAfterBrokerage: { $sum: "$profitAfterBrokerage" },
+          totalCommission: { $sum: "$commissionPaid" },
+          totalProfitAfterCommission: { $sum: "$profitAfterCommission" },
+          totalBrokerage: { $sum: "$brokerage" },
         },
       },
-    },
-    {
-      $lookup: {
-        from: "users",
-        localField: "_id",
-        foreignField: "_id",
-        as: "user",
+
+      // 2. Join with the User collection
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "userDetails",
+        },
       },
-    },
-    { $unwind: "$user" },
-    {
-      $addFields: {
-        commission: {
-          $cond: [
-            {
-              $and: [
-                "$user.commissionPerTrade",
-                { $gt: ["$user.commissionRate", 0] },
-              ],
+      { $unwind: "$userDetails" },
+
+      // 3. Calculate Tax Amount and Net Profit after tax (Logic: only if positive and payee)
+      {
+        $addFields: {
+          totalTaxAmt: {
+            $cond: {
+              if: {
+                $and: [
+                  { $gt: ["$totalProfitAfterCommission", 0] },
+                  { $eq: ["$userDetails.taxOnTotalProfit", true] },
+                ],
+              },
+              then: {
+                $multiply: [
+                  "$totalProfitAfterCommission",
+                  { $divide: [{ $ifNull: ["$userDetails.taxRate", 0] }, 100] },
+                ],
+              },
+              else: 0,
             },
-            { $multiply: ["$grossAfterBrokerage", "$user.commissionRate"] },
-            0,
-          ],
+          },
         },
       },
-    },
-    {
-      $addFields: {
-        afterCommission: { $subtract: ["$grossAfterBrokerage", "$commission"] },
-      },
-    },
-    {
-      $addFields: {
-        tax: {
-          $cond: [
-            { $and: ["$user.taxOnTotalProfit", { $gt: ["$user.taxRate", 0] }] },
-            { $multiply: ["$afterCommission", "$user.taxRate"] },
-            0,
-          ],
+
+      // 4. Project Final Fields
+      {
+        $project: {
+          _id: 0,
+          user: "$userDetails",
+          totalTradeProfit: 1,
+          totalProfitAfterBrokerage: 1,
+          totalCommission: 1,
+          totalProfitAfterCommission: 1,
+          totalBrokerage: 1,
+          totalTaxAmt: 1,
+          totalProfitAfterTax: {
+            $subtract: ["$totalProfitAfterCommission", "$totalTaxAmt"],
+          },
         },
       },
-    },
-    {
-      $addFields: {
-        netProfit: { $subtract: ["$afterCommission", "$tax"] },
+    ]);
+
+    // 5. Calculate Grand Totals using reduce (In-memory)
+    const grandTotals = report.reduce(
+      (acc, curr) => {
+        acc.g_TradeProfit += curr.totalTradeProfit || 0;
+        acc.g_TotalProfitAfterBrokerage += curr.totalProfitAfterBrokerage || 0;
+        acc.g_TotalProfitAfterCommission +=
+          curr.totalProfitAfterCommission || 0;
+        acc.g_TotalCommission += curr.totalCommission || 0;
+        acc.g_TotalBrokerage += curr.totalBrokerage || 0;
+        acc.g_TotalTaxAmt += curr.totalTaxAmt || 0;
+        acc.g_TotalProfitAfterTax += curr.totalProfitAfterTax || 0;
+        return acc;
       },
-    },
-    {
-      $project: {
-        _id: 0,
-        userId: "$user._id",
-        name: "$user.fullName",
-        grossAfterBrokerage: 1,
-        commission: 1,
-        tax: 1,
-        netProfit: 1,
-      },
-    },
-  ]);
-}
+      {
+        g_TradeProfit: 0,
+        g_TotalProfitAfterBrokerage: 0,
+        g_TotalProfitAfterCommission: 0,
+        g_TotalCommission: 0,
+        g_TotalBrokerage: 0,
+        g_TotalTaxAmt: 0,
+        g_TotalProfitAfterTax: 0,
+      }
+    );
+
+    const finalObject = {
+      users: report,
+      grandTotals,
+      userCount: report.length,
+    };
+
+    return finalObject;
+  } catch (err) {
+    return {};
+  }
+};

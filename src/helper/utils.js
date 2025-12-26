@@ -2,21 +2,23 @@ export const getTradeMetadata = (
   user,
   { sell_price, buy_price, quantity, brokerage }
 ) => {
-    // Calculate transaction profit
-  const transactionProfit = (sell_price - buy_price) * quantity;
-// Calculate total profit after deducting brokerage
-  const totalProfit = transactionProfit - brokerage;
-// Calculate commission paid based on user settings
+  // Calculate trade profit
+  const tradeProfit = (sell_price - buy_price) * quantity;
+  // Calculate profit after deducting brokerage
+  const profitAfterBrokerage = tradeProfit - brokerage;
+  // Calculate commission paid based on user settings
   const commissionPaid =
-    user.commissionPerTrade && totalProfit > 0
-      ? totalProfit * (user.commissionRate / 100)
+    user.commissionPerTrade && profitAfterBrokerage > 0
+      ? profitAfterBrokerage * (user.commissionRate / 100)
       : 0;
-  const netProfit = totalProfit - commissionPaid;
+
+  const profitAfterCommission = profitAfterBrokerage - commissionPaid;
 
   return {
-    transactionProfit,
-    totalProfit,
+    tradeProfit,
+    profitAfterBrokerage,
     commissionPaid,
-    netProfit,
+    profitAfterCommission,
+    brokerage,
   };
 };

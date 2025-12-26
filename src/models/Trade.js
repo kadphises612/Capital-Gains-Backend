@@ -37,10 +37,10 @@ const TradeSchema = new mongoose.Schema(
       type: Date,
       required: true,
     },
-    transactionProfit: { type: Number, required: true, default: 0 },
-    totalProfit: { type: Number, required: true, default: 0 },
+    tradeProfit: { type: Number, required: true, default: 0 },
+    profitAfterBrokerage: { type: Number, required: true, default: 0 },
     commissionPaid: { type: Number, required: true, default: 0 },
-    netProfit: { type: Number, required: true, default: 0 },
+    profitAfterCommission: { type: Number, required: true, default: 0 },
     brokerage: { type: Number, default: 0, required: true },
   },
   { timestamps: true }

@@ -18,6 +18,6 @@ router.put("/update/:userId", updateUser); // update
 router.delete("/delete/:userId", deleteUser); // delete
 
 router.get("/summary/:userId", userSummaryHandler);
-router.get("/summary/all", allUsersSummaryHandler);
+router.get("/all/summary/", allUsersSummaryHandler);
 
 export default router;
