@@ -37,27 +37,13 @@ const TradeSchema = new mongoose.Schema(
       type: Date,
       required: true,
     },
-    totalProfit: { type: Number, required: true },
-    brokerage: { type: Number, default: 0 },
+    transactionProfit: { type: Number, required: true, default: 0 },
+    totalProfit: { type: Number, required: true, default: 0 },
+    commissionPaid: { type: Number, required: true, default: 0 },
+    netProfit: { type: Number, required: true, default: 0 },
+    brokerage: { type: Number, default: 0, required: true },
   },
   { timestamps: true }
 );
 
-TradeSchema.pre("validate", function (next) {
-  if (
-    this.buy_price != null &&
-    this.sell_price != null &&
-    this.quantity != null
-  ) {
-    this.totalProfit = (this.sell_price - this.buy_price) * this.quantity;
-  }
-});
-
-TradeSchema.virtual("netProfit").get(function () {
-  if (this.totalProfit == null) return null;
-  return this.totalProfit - (this.brokerage ?? 0);
-});
-
-TradeSchema.set("toJSON", { virtuals: true });
-TradeSchema.set("toObject", { virtuals: true });
 export const Trade = mongoose.model("Trade", TradeSchema);

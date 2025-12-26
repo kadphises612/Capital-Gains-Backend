@@ -1,6 +1,5 @@
 import { User } from "../models/User.js";
 import { Trade } from "../models/Trade.js";
-import mongoose from "mongoose";
 
 export async function getUserSummary(userId) {
   const user = await User.findById(userId);
@@ -8,38 +7,36 @@ export async function getUserSummary(userId) {
 
   const trades = await Trade.find({ userId });
 
-  const grossAfterBrokerage = trades.reduce(
-    (sum, t) => sum + (t.totalProfit - t.brokerage),
-    0
+  const {
+    transactionProfit,
+    totalProfit,
+    commissionPaid,
+    netProfit,
+    brokerage,
+  } = trades.reduce(
+    (acc, el) => {
+      acc.transactionProfit += el.transactionProfit;
+      acc.totalProfit += el.totalProfit;
+      acc.commissionPaid += el.commissionPaid;
+      acc.netProfit += el.netProfit;
+      acc.brokerage += el.brokerage;
+      return acc;
+    },
+    {
+      transactionProfit: 0,
+      totalProfit: 0,
+      commissionPaid: 0,
+      netProfit: 0,
+      brokerage: 0,
+    }
   );
 
-  let commission = 0;
-  if (
-    user.commissionPerTrade &&
-    user.commissionRate > 0 &&
-    grossAfterBrokerage > 0
-  ) {
-    commission = grossAfterBrokerage * (user.commissionRate / 100);
-  }
-
-  const afterCommission = grossAfterBrokerage - commission;
-
-  let tax = 0;
-  if (user.taxOnTotalProfit && user.taxRate > 0 && afterCommission > 0) {
-    tax = afterCommission * (user.taxRate / 100);
-  }
-
-  console.log("afterCommission", afterCommission);
-
-  const netProfit = afterCommission - tax;
-
   return {
-    userId,
-    name: user.fullName,
-    grossAfterBrokerage,
-    commission,
-    tax,
+    transactionProfit,
+    totalProfit,
+    commissionPaid,
     netProfit,
+    brokerage,
   };
 }
 

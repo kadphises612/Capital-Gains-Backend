@@ -1,3 +1,4 @@
+import { getTradeMetadata } from "../helper/utils.js";
 import { Trade } from "../models/Trade.js";
 import { User } from "../models/User.js";
 
@@ -6,10 +7,16 @@ export async function createTrade(req, res) {
   try {
     const { userId, ...trade_details } = req.body;
 
-    const exists = await User.findById(userId);
-    if (!exists) return res.status(404).json({ error: "User not found" });
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ error: "User not found" });
 
-    const trade = await Trade.create({ userId, ...trade_details });
+    const tradeMetaData = getTradeMetadata(user, trade_details);
+
+    const trade = await Trade.create({
+      userId,
+      ...trade_details,
+      ...tradeMetaData,
+    });
     res.status(201).json(trade);
   } catch (e) {
     res.status(400).json({ error: e.message });
