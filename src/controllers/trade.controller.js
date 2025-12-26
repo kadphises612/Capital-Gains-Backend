@@ -39,7 +39,10 @@ export const createTrade = async (req, res) => {
     if (!userExists) {
       return res.status(404).json({ message: "User not found" });
     }
-    const net_profit_ctake = c_take ? net_profit * 0.8 : net_profit;
+
+    const commisiion = c_take && net_profit > 0 ? 0.2 * net_profit : 0;
+    const net_profit_ctake = net_profit - commisiion;
+
     const trade = await Trade.create({
       userId,
       symbol,
