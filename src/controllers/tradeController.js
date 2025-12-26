@@ -4,12 +4,12 @@ import { User } from "../models/User.js";
 // Create trade
 export async function createTrade(req, res) {
   try {
-    const { user, totalProfit, brokerage } = req.body;
+    const { userId, ...trade_details } = req.body;
 
-    const exists = await User.findById(user);
+    const exists = await User.findById(userId);
     if (!exists) return res.status(404).json({ error: "User not found" });
 
-    const trade = await Trade.create({ user, totalProfit, brokerage });
+    const trade = await Trade.create({ userId, ...trade_details });
     res.status(201).json(trade);
   } catch (e) {
     res.status(400).json({ error: e.message });
@@ -22,7 +22,7 @@ export async function getTradesForUser(req, res) {
     const { userId } = req.params;
     const { from, to } = req.query;
 
-    const filter = { user: userId };
+    const filter = { userId };
 
     if (from || to) {
       filter.createdAt = {};

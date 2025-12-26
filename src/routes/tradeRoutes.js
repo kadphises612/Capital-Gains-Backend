@@ -8,7 +8,7 @@ import {
 
 const router = Router();
 
-router.post("/", createTrade);
+router.post("/create", createTrade);
 
 router.get("/user/:userId", getTradesForUser);
 

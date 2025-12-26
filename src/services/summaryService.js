@@ -1,11 +1,12 @@
 import { User } from "../models/User.js";
 import { Trade } from "../models/Trade.js";
+import mongoose from "mongoose";
 
 export async function getUserSummary(userId) {
   const user = await User.findById(userId);
   if (!user) throw new Error("User not found");
 
-  const trades = await Trade.find({ user: userId });
+  const trades = await Trade.find({ userId });
 
   const grossAfterBrokerage = trades.reduce(
     (sum, t) => sum + (t.totalProfit - t.brokerage),
@@ -13,16 +14,22 @@ export async function getUserSummary(userId) {
   );
 
   let commission = 0;
-  if (user.commissionPerTrade && user.commissionRate > 0) {
-    commission = grossAfterBrokerage * user.commissionRate;
+  if (
+    user.commissionPerTrade &&
+    user.commissionRate > 0 &&
+    grossAfterBrokerage > 0
+  ) {
+    commission = grossAfterBrokerage * (user.commissionRate / 100);
   }
 
   const afterCommission = grossAfterBrokerage - commission;
 
   let tax = 0;
-  if (user.taxOnTotalProfit && user.taxRate > 0) {
-    tax = afterCommission * user.taxRate;
+  if (user.taxOnTotalProfit && user.taxRate > 0 && afterCommission > 0) {
+    tax = afterCommission * (user.taxRate / 100);
   }
+
+  console.log("afterCommission", afterCommission);
 
   const netProfit = afterCommission - tax;
 
