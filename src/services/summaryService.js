@@ -30,13 +30,21 @@ export async function getUserSummary(userId) {
       brokerage: 0,
     }
   );
+  const taxAmt =
+    profitAfterCommission > 0 && user.taxOnTotalProfit
+      ? (profitAfterCommission * (user.taxRate || 0)) / 100
+      : 0;
+  const profitAfterTax = profitAfterCommission - taxAmt;
 
   return {
+    user,
     tradeProfit,
     profitAfterBrokerage,
     commissionPaid,
     profitAfterCommission,
     brokerage,
+    taxAmt,
+    profitAfterTax,
   };
 }
 
@@ -100,6 +108,7 @@ export const getAllUsersSummary = async (req, res) => {
             name: "$name", // Add other user fields you need here
             email: "$email",
             pan: "$pan",
+            broker: "$broker",
             taxOnTotalProfit: 1,
             taxRate: 1,
           },
