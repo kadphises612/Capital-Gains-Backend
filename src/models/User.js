@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const UserSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
+    email: { type: String, required: true, unique: false },
     pan: { type: String, required: true, unique: true, uppercase: true },
     commissionRate: { type: Number, default: 0 },
     commissionPerTrade: { type: Boolean, default: false },
