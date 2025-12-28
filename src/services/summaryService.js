@@ -38,6 +38,7 @@ export async function getUserSummary(userId) {
 
   return {
     user,
+    tradeCount: trades.length,
     tradeProfit,
     profitAfterBrokerage,
     commissionPaid,
@@ -68,6 +69,7 @@ export const getAllUsersSummary = async (req, res) => {
           totalProfitAfterBrokerage: {
             $sum: "$userTrades.profitAfterBrokerage",
           },
+          tradeCount: { $size: "$userTrades" },
           totalCommission: { $sum: "$userTrades.commissionPaid" },
           totalProfitAfterCommission: {
             $sum: "$userTrades.profitAfterCommission",
@@ -112,6 +114,7 @@ export const getAllUsersSummary = async (req, res) => {
             taxOnTotalProfit: 1,
             taxRate: 1,
           },
+          tradeCount: 1,
           totalTradeProfit: 1,
           totalProfitAfterBrokerage: 1,
           totalCommission: 1,
